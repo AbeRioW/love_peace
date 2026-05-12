@@ -8,14 +8,14 @@ love_peace\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h
 love_peace\adc.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 love_peace\adc.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
 love_peace\adc.o: ../Drivers/CMSIS/Include/core_cm3.h
-love_peace\adc.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stdint.h
+love_peace\adc.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 love_peace\adc.o: ../Drivers/CMSIS/Include/cmsis_version.h
 love_peace\adc.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 love_peace\adc.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 love_peace\adc.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
 love_peace\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 love_peace\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-love_peace\adc.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stddef.h
+love_peace\adc.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
 love_peace\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
 love_peace\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
 love_peace\adc.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h

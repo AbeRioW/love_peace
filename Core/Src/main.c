@@ -101,7 +101,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
-	  HAL_GPIO_WritePin(GPIOA, FAN_Pin|WATER_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOA, FAN_Pin|WATER_Pin, GPIO_PIN_RESET);
   OLED_Init();
   OLED_Clear();
   GasSensor_Init();
@@ -128,7 +128,6 @@ int main(void)
 	{
 		  while(1);
 	}
-	
 
 		if(!ESP8266_MQTT_Subscribe(MQTT_TOPIC_SET,0))
 	{
@@ -160,6 +159,14 @@ int main(void)
     snprintf(light_str, sizeof(light_str), "%d", light_value);
     snprintf(soil_str, sizeof(soil_str), "%d", soil_moisture_value);
     
+    char co2_str[16];
+    uint16_t co2_val = GasSensor_GetCO2();
+    if (co2_val != 0xFFFF) {
+        snprintf(co2_str, sizeof(co2_str), "%d", co2_val);
+    } else {
+        co2_str[0] = '\0';
+    }
+    
     /* 定时MQTT发布数据 */
     if(HAL_GetTick() - last_mqtt_time > 5000) {
         if(Control_GetRegion() == REGION_1) {
@@ -167,11 +174,17 @@ int main(void)
             MQTT_Publish_Data("humidity", hum_str);
             MQTT_Publish_Data("light", light_str);
             MQTT_Publish_Data("soil", soil_str);
+            if (co2_str[0] != '\0') {
+                MQTT_Publish_Data("co2", co2_str);
+            }
         } else {
             MQTT_Publish_Data("temperature1", temp_str);
             MQTT_Publish_Data("humidity1", hum_str);
             MQTT_Publish_Data("light1", light_str);
             MQTT_Publish_Data("soil1", soil_str);
+            if (co2_str[0] != '\0') {
+                MQTT_Publish_Data("co21", co2_str);
+            }
         }
         last_mqtt_time = HAL_GetTick();
     }
@@ -203,8 +216,8 @@ int main(void)
             HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
         }
         
-        /* 土壤湿度控制：低于阈值启动水泵浇水，高于阈值关闭水泵 */
-        if(soil_moisture_value < soil_threshold)
+        /* 土壤湿度控制：高于阈值启动水泵浇水，低于阈值关闭水泵 */
+        if(soil_moisture_value > soil_threshold)
         {
             HAL_GPIO_WritePin(WATER_GPIO_Port, WATER_Pin, GPIO_PIN_SET);
         }
@@ -265,14 +278,24 @@ int main(void)
          OLED_ShowNum(80, 40, dht11_data.humidity_dec, 1, 8, 1); 
          OLED_ShowString(88, 40, (uint8_t*)"%", 8, 1); 
  
-         OLED_ShowString(0, 48, (uint8_t*)"CO2:", 8, 1); 
-         uint16_t co2_value = 0; 
-         if (GasSensor_GetCO2(&co2_value)) { 
-             OLED_ShowNum(50, 48, co2_value, 4, 8, 1); 
+         OLED_ShowString(0, 48, (uint8_t*)"CO2: ", 8, 1); 
+         uint16_t co2_val = GasSensor_GetCO2(); 
+         if (co2_val != 0xFFFF) { 
+             OLED_ShowNum(50, 48, co2_val, 4, 8, 1); 
              OLED_ShowString(90, 48, (uint8_t*)"ppm", 8, 1); 
          } else { 
              OLED_ShowString(50, 48, (uint8_t*)"----", 8, 1); 
          }
+         
+         // 调试信息：显示接收计数和有效帧计数
+         OLED_ShowString(0, 56, (uint8_t*)"I:", 8, 1);
+         extern volatile uint32_t usart2_irq_count;
+         OLED_ShowNum(15, 56, usart2_irq_count, 5, 8, 1);
+         OLED_ShowString(50, 56, (uint8_t*)"R:", 8, 1);
+         extern volatile uint32_t usart2_rx_count;
+         OLED_ShowNum(65, 56, usart2_rx_count, 4, 8, 1);
+         OLED_ShowString(100, 56, (uint8_t*)"O:", 8, 1);
+         OLED_ShowNum(115, 56, GasSensor_GetValidCount(), 3, 8, 1);
     } else if(Control_GetPage() == PAGE_DEVICE_CONTROL) {
         /* 显示设备控制页面 */
         Display_DeviceControlPage();

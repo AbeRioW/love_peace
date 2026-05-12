@@ -5,7 +5,7 @@
             "path" : "pages/detail/detail",
             "style" :                                                                                    
             {
-                "navigationBarTitleText": "智能家庭安防",
+                "navigationBarTitleText": "花草智能养护系统",
                 "enablePullDownRefresh": false
             }
             

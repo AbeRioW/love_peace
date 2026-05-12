@@ -9,7 +9,7 @@ static Device_t selected_device = DEV_BEEP;
 static Threshold_t selected_threshold = THRESHOLD_TEMP;
 static Region_t current_region = REGION_1;
 static uint8_t device_state[DEV_MAX] = {0};
-static int16_t thresholds[THRESHOLD_MAX] = {30, 2000, 2000, 50};
+static int16_t thresholds[THRESHOLD_MAX] = {30, 2000, 2000, 80};
 static volatile uint8_t key1_pressed = 0;
 static volatile uint8_t key2_pressed = 0;
 static volatile uint8_t key3_pressed = 0;
@@ -40,7 +40,7 @@ void Control_Init(void)
     thresholds[THRESHOLD_TEMP] = 30;
     thresholds[THRESHOLD_LIGHT] = 2000;
     thresholds[THRESHOLD_SOIL] = 2000;
-    thresholds[THRESHOLD_HUMIDITY] = 50;
+    thresholds[THRESHOLD_HUMIDITY] = 80;
 }
 
 SystemMode_t Control_GetMode(void)

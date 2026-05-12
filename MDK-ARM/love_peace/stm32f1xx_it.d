@@ -7,14 +7,14 @@ love_peace\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def
 love_peace\stm32f1xx_it.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 love_peace\stm32f1xx_it.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
 love_peace\stm32f1xx_it.o: ../Drivers/CMSIS/Include/core_cm3.h
-love_peace\stm32f1xx_it.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stdint.h
+love_peace\stm32f1xx_it.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 love_peace\stm32f1xx_it.o: ../Drivers/CMSIS/Include/cmsis_version.h
 love_peace\stm32f1xx_it.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 love_peace\stm32f1xx_it.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 love_peace\stm32f1xx_it.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
 love_peace\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 love_peace\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-love_peace\stm32f1xx_it.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stddef.h
+love_peace\stm32f1xx_it.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
 love_peace\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
 love_peace\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
 love_peace\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h
@@ -30,7 +30,7 @@ love_peace\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr
 love_peace\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 love_peace\stm32f1xx_it.o: ../Core/Inc/stm32f1xx_it.h
 love_peace\stm32f1xx_it.o: ../App/esp8266.h
-love_peace\stm32f1xx_it.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stdbool.h
-love_peace\stm32f1xx_it.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\string.h
+love_peace\stm32f1xx_it.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+love_peace\stm32f1xx_it.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 love_peace\stm32f1xx_it.o: ../App/gas_sensor.h
 love_peace\stm32f1xx_it.o: ../App/control.h

@@ -265,13 +265,20 @@ void USART1_IRQHandler(void)
 /**
   * @brief This function handles USART2 global interrupt.
   */
+volatile uint32_t usart2_irq_count = 0;  // 测试用：计数USART2中断次数
+volatile uint32_t usart2_rx_count = 0;   // 测试用：计数收到的字节数
+
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
+  usart2_irq_count++;  // 每次进入中断就计数
+  
+  // 直接读取DR寄存器的方式（最简单最可靠）
   if(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_RXNE))
   {
-      uint8_t data = (uint8_t)(huart2.Instance->DR & 0xFF);
-      GasSensor_UpdateFromUART(data);
+    uint8_t data = (uint8_t)(huart2.Instance->DR & 0xFF);
+    usart2_rx_count++;
+    GasSensor_UpdateFromUART(data);  // 调用原来的解析函数
   }
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
@@ -298,9 +305,10 @@ void EXTI15_10_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	    if (huart == &huart1)
+    if (huart == &huart1)
     {
         esp8266_cnt = ESP8266_BUF_SIZE - 1 - huart->RxXferCount;
         if (esp8266_cnt > 0) {
