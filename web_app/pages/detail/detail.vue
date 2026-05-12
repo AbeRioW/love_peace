@@ -47,7 +47,7 @@
 						<view class="dev-name">土壤湿度</view>
 						<image class="dev-logo" src="../../static/humi.png" mode=""></image>
 					</view>
-					<view class="dev-data">{{soil}} %</view>
+					<view class="dev-data">{{soil}}</view>
 				</view>
 			</view>
 		</view>
@@ -98,19 +98,52 @@
 						<view class="dev-name">土壤湿度</view>
 						<image class="dev-logo" src="../../static/humi.png" mode=""></image>
 					</view>
-					<view class="dev-data">{{soil1}} %</view>
+					<view class="dev-data">{{soil1}}</view>
 				</view>
 			</view>
 		</view>
 		
-		<!-- 运动控制区域 -->
-		<view class="move-controls">
-			<view class="move-buttons">
-				<button class="move-button" @click="move(5)">语音报警</button>
-				<button class="move-button" :class="{'buzzer-on': buzzer}" @click="toggleBuzzer">蜂鸣器报警</button>
+		<!-- 控制按钮区域 -->
+		<view class="control-area">
+			<view class="control-title">设备控制</view>
+			<view class="control-buttons">
+				<button class="control-button" :class="{'active': beepControl}" @click="toggleBeep">蜂鸣器</button>
+				<button class="control-button" :class="{'active': ledControl}" @click="toggleLed">LED</button>
+				<button class="control-button" :class="{'active': waterControl}" @click="toggleWater">水泵</button>
+				<button class="control-button" :class="{'active': fanControl}" @click="toggleFan">风扇</button>
 			</view>
 		</view>
-	</view>
+
+		<!-- 阈值设置区域 -->
+		<view class="threshold-area">
+			<view class="threshold-title">阈值设置</view>
+			
+			<!-- 温度阈值 -->
+			<view class="threshold-item">
+				<input class="threshold-input" type="number" placeholder="温度阈值(0-99)" v-model="thTemp" :maxlength="2" />
+				<button class="threshold-button" @click="setThTemp">设置温度</button>
+			</view>
+
+			<!-- 环境湿度阈值 -->
+			<view class="threshold-item">
+				<input class="threshold-input" type="number" placeholder="湿度阈值(0-99)" v-model="thHumidity" :maxlength="2" />
+				<button class="threshold-button" @click="setThHumidity">设置湿度</button>
+			</view>
+
+			<!-- 光照阈值 -->
+			<view class="threshold-item">
+				<input class="threshold-input" type="number" placeholder="光照阈值(0-4900)" v-model="thLight" :maxlength="4" />
+				<button class="threshold-button" @click="setThLight">设置光照</button>
+			</view>
+
+			<!-- 土壤湿度阈值 -->
+			<view class="threshold-item">
+				<input class="threshold-input" type="number" placeholder="土壤湿度阈值(0-4900)" v-model="thSoil" :maxlength="4" />
+				<button class="threshold-button" @click="setThSoil">设置土壤湿度</button>
+			</view>
+		</view>
+		
+		</view>
 </template>
 
 <script>
@@ -149,12 +182,19 @@
 				// 湿度和温度的阈值
 				humi_th: 70,
 				temp_th: 28,
+				// 阈值设置输入框数据
+				thTemp: '',
+				thHumidity: '',
+				thLight: '',
+				thSoil: '',
 				// 控制状态
 				led: false,
-				buzzer: false,
-				Car_flag: null,
-				currentAction: '待命',
 				key_th: {},
+				// 新控制按钮状态
+				beepControl: false,
+				ledControl: false,
+				waterControl: false,
+				fanControl: false,
 				// 数据更新定时器
 				dataTimer: null
 			}
@@ -325,17 +365,10 @@
 
 				});
 			},
-			// 运动控制
-			move(action) {
-				const actions = ['前进', '左转', '停止', '右转', '后退', '避障模式', '循迹模式'];
-				this.currentAction = actions[action];
-				this.Car_flag = action;
 
-				this.uploadCarFlag();
-			},
-
-			// 上传Car_flag
-			uploadCarFlag() {
+			// 蜂鸣器控制
+			toggleBeep() {
+				this.beepControl = !this.beepControl;
 				uni.request({
 					url: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
 					method: 'POST',
@@ -343,7 +376,7 @@
 						product_id: product_id,
 						device_name: device_name,
 						params: {
-							"Car_flag": this.Car_flag
+							"beep_control": this.beepControl
 						}
 					},
 					header: {
@@ -352,8 +385,9 @@
 				});
 			},
 
-			toggleBuzzer() {
-				this.buzzer = !this.buzzer;
+			// LED控制
+			toggleLed() {
+				this.ledControl = !this.ledControl;
 				uni.request({
 					url: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
 					method: 'POST',
@@ -361,12 +395,154 @@
 						product_id: product_id,
 						device_name: device_name,
 						params: {
-							"SET1": this.buzzer ? 1 : 0
+							"led_control": this.ledControl
 						}
 					},
 					header: {
 						'authorization': this.token
 					},
+				});
+			},
+
+			// 水泵控制
+			toggleWater() {
+				this.waterControl = !this.waterControl;
+				uni.request({
+					url: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
+					method: 'POST',
+					data: {
+						product_id: product_id,
+						device_name: device_name,
+						params: {
+							"water_control": this.waterControl
+						}
+					},
+					header: {
+						'authorization': this.token
+					},
+				});
+			},
+
+			// 风扇控制
+			toggleFan() {
+				this.fanControl = !this.fanControl;
+				uni.request({
+					url: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
+					method: 'POST',
+					data: {
+						product_id: product_id,
+						device_name: device_name,
+						params: {
+							"fan_control": this.fanControl
+						}
+					},
+					header: {
+						'authorization': this.token
+					},
+				});
+			},
+
+			// 设置温度阈值
+			setThTemp() {
+				let value = parseInt(this.thTemp);
+				if (isNaN(value) || value < 0 || value > 99) {
+					uni.showToast({ title: '请输入0-99的数值', icon: 'none' });
+					return;
+				}
+				uni.request({
+					url: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
+					method: 'POST',
+					data: {
+						product_id: product_id,
+						device_name: device_name,
+						params: {
+							"th_temp": value
+						}
+					},
+					header: {
+						'authorization': this.token
+					},
+					success: () => {
+						uni.showToast({ title: '温度阈值设置成功', icon: 'success' });
+					}
+				});
+			},
+
+			// 设置环境湿度阈值
+			setThHumidity() {
+				let value = parseInt(this.thHumidity);
+				if (isNaN(value) || value < 0 || value > 99) {
+					uni.showToast({ title: '请输入0-99的数值', icon: 'none' });
+					return;
+				}
+				uni.request({
+					url: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
+					method: 'POST',
+					data: {
+						product_id: product_id,
+						device_name: device_name,
+						params: {
+							"th_thm": value
+						}
+					},
+					header: {
+						'authorization': this.token
+					},
+					success: () => {
+						uni.showToast({ title: '湿度阈值设置成功', icon: 'success' });
+					}
+				});
+			},
+
+			// 设置光照阈值
+			setThLight() {
+				let value = parseInt(this.thLight);
+				if (isNaN(value) || value < 0 || value > 4900) {
+					uni.showToast({ title: '请输入0-4900的数值', icon: 'none' });
+					return;
+				}
+				uni.request({
+					url: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
+					method: 'POST',
+					data: {
+						product_id: product_id,
+						device_name: device_name,
+						params: {
+							"th_light": value
+						}
+					},
+					header: {
+						'authorization': this.token
+					},
+					success: () => {
+						uni.showToast({ title: '光照阈值设置成功', icon: 'success' });
+					}
+				});
+			},
+
+			// 设置土壤湿度阈值
+			setThSoil() {
+				let value = parseInt(this.thSoil);
+				if (isNaN(value) || value < 0 || value > 4900) {
+					uni.showToast({ title: '请输入0-4900的数值', icon: 'none' });
+					return;
+				}
+				uni.request({
+					url: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
+					method: 'POST',
+					data: {
+						product_id: product_id,
+						device_name: device_name,
+						params: {
+							"th_soil": value
+						}
+					},
+					header: {
+						'authorization': this.token
+					},
+					success: () => {
+						uni.showToast({ title: '土壤湿度阈值设置成功', icon: 'success' });
+					}
 				});
 			}
 		}
@@ -469,49 +645,85 @@
 	/* 滑动条样式 */
 	.ctrl-slider {
 		width: 580rpx;
-		/* 设置宽度为580像素 */
 	}
 
-	/* 运动控制区域样式 */
-	.move-controls {
-		margin-top: 50rpx;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
-
-	.move-buttons {
-		display: flex;
-		justify-content: center;
+	/* 控制按钮区域样式 */
+	.control-area {
 		width: 100%;
+		margin-top: 20rpx;
 	}
 
-	.move-button,
-	.turn-button {
-		width: 210rpx;
-		height: 110rpx;
-		margin: 10rpx;
-		font-size: 20rpx;
+	.control-title {
+		font-size: 28rpx;
+		font-weight: bold;
+		color: #fff;
+		margin-bottom: 15rpx;
+		padding-left: 10rpx;
+		border-left: 8rpx solid #fff;
+	}
+
+	.control-buttons {
+		display: flex;
+		justify-content: space-between;
+		flex-wrap: wrap;
+	}
+
+	.control-button {
+		width: calc(25% - 10rpx);
+		height: 80rpx;
+		font-size: 22rpx;
+		background-color: #fff;
+		color: #333;
+		border-radius: 15rpx;
+		border: none;
+		margin-bottom: 10rpx;
+	}
+
+	.control-button.active {
 		background-color: #4CAF50;
 		color: #fff;
 	}
 
-	.buzzer-on {
-		background-color: #f44336 !important;
+	/* 阈值设置区域样式 */
+	.threshold-area {
+		width: 100%;
+		margin-top: 20rpx;
 	}
 
-	.turning-buttons {
+	.threshold-title {
+		font-size: 28rpx;
+		font-weight: bold;
+		color: #fff;
+		margin-bottom: 15rpx;
+		padding-left: 10rpx;
+		border-left: 8rpx solid #fff;
+	}
+
+	.threshold-item {
 		display: flex;
 		justify-content: space-between;
-		width: 100%;
-		margin-top: 10rpx;
+		align-items: center;
+		margin-bottom: 15rpx;
 	}
 
-	.current-action {
-		margin-top: 20rpx;
-		font-size: 18rpx;
-		color: #333;
-		width: 100%;
-		text-align: center;
+	.threshold-input {
+		width: 200rpx;
+		height: 70rpx;
+		font-size: 24rpx;
+		background-color: #fff;
+		border-radius: 10rpx;
+		padding: 0 15rpx;
+		border: none;
 	}
-</style>
+
+	.threshold-button {
+		width: 180rpx;
+		height: 70rpx;
+		font-size: 22rpx;
+		background-color: #fff;
+		color: #333;
+		border-radius: 10rpx;
+		border: none;
+	}
+
+	</style>

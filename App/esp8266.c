@@ -9,6 +9,7 @@
 #include "gpio.h"
 #include "stdlib.h"
 #include "oled.h"
+#include "control.h"
 
         
 // 全局变量定义
@@ -561,7 +562,7 @@ bool ESP8266_MQTT_Publish(const char *topic, const char *payload, uint8_t qos, u
 //    OLED_Clear();
     return false;
 }
-#if 0
+#if 1
 /**
  * 检查接收缓冲区，寻找订阅主题的下发消息并解析 JSON 控制 LED
  * 说明：主循环中定期调用该函数（避免在中断中做复杂解析）
@@ -579,15 +580,10 @@ void ESP8266_ProcessMessages(void)
     ((char*)esp8266_buf)[0] = '\0';
     local_buf[len] = '\0';
 
-    // 调试打印收到的数据
-    HAL_UART_Transmit(&huart2, (uint8_t*)"--PROCESS RX: ", 14, 100);
-    HAL_UART_Transmit(&huart2, (uint8_t*)local_buf, strlen(local_buf), 500);
-    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 100);
 
     // 检查是否是MQTT订阅消息，如果不是则直接返回
     if (strstr(local_buf, "+MQTTSUBRECV") == NULL)
     {
-        HAL_UART_Transmit(&huart2, (uint8_t*)"DEBUG: Not a SUBRECV message\r\n", 32, 100);
         return;
     }
 
@@ -595,7 +591,6 @@ void ESP8266_ProcessMessages(void)
     char *p_json = strchr(local_buf, '{');
     if (!p_json) 
     {
-        HAL_UART_Transmit(&huart2, (uint8_t*)"DEBUG: No JSON found\r\n", 24, 100);
         return;
     }
 
@@ -613,36 +608,100 @@ void ESP8266_ProcessMessages(void)
     json_buf[idx] = '\0';
     if (idx == 0)
     {
-        HAL_UART_Transmit(&huart2, (uint8_t*)"DEBUG: Empty JSON\r\n", 21, 100);
         return;
     }
 
-    // 调试打印提取的 JSON
-    HAL_UART_Transmit(&huart2, (uint8_t*)"DEBUG: Extracted JSON: ", 22, 100);
-    HAL_UART_Transmit(&huart2, (uint8_t*)json_buf, strlen(json_buf), 500);
-    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 100);
 
-    // 简化测试：直接处理 LED 控制
-    HAL_UART_Transmit(&huart2, (uint8_t*)"DEBUG: Using simplified LED control\r\n", 38, 100);
     
-    // 检查 JSON 中是否包含 "LED":true
-    if (strstr(json_buf, "\"LED\":true") != NULL)
+    // 解析 JSON 并控制设备
+    bool need_switch_manual = false;
+    
+    // 控制 LED
+    if (strstr(json_buf, "\"led_control\":true") != NULL)
     {
-        HAL_UART_Transmit(&huart2, (uint8_t*)"LED1 ON\r\n", 10, 100);
-			  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+        need_switch_manual = true;
     }
-    else if (strstr(json_buf, "\"LED\":false") != NULL)
+    else if (strstr(json_buf, "\"led_control\":false") != NULL)
     {
-        HAL_UART_Transmit(&huart2, (uint8_t*)"LED1 OFF\r\n", 9, 100);
-			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
     }
-    else
+    
+    // 控制蜂鸣器
+    if (strstr(json_buf, "\"beep_control\":true") != NULL)
     {
-        HAL_UART_Transmit(&huart2, (uint8_t*)"DEBUG: LED value not found\r\n", 30, 100);
+        HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_RESET);
+        need_switch_manual = true;
     }
+    else if (strstr(json_buf, "\"beep_control\":false") != NULL)
+    {
+        HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_SET);
+    }
+    
+    // 控制水泵
+    if (strstr(json_buf, "\"water_control\":true") != NULL)
+    {
+        HAL_GPIO_WritePin(WATER_GPIO_Port, WATER_Pin, GPIO_PIN_SET);
+        need_switch_manual = true;
+    }
+    else if (strstr(json_buf, "\"water_control\":false") != NULL)
+    {
+        HAL_GPIO_WritePin(WATER_GPIO_Port, WATER_Pin, GPIO_PIN_RESET);
+    }
+    
+    // 控制风扇
+    if (strstr(json_buf, "\"fan_control\":true") != NULL)
+    {
+        HAL_GPIO_WritePin(FAN_GPIO_Port, FAN_Pin, GPIO_PIN_SET);
+        need_switch_manual = true;
+    }
+    else if (strstr(json_buf, "\"fan_control\":false") != NULL)
+    {
+        HAL_GPIO_WritePin(FAN_GPIO_Port, FAN_Pin, GPIO_PIN_RESET);
+    }
+    
+    // 如果收到任何 true 的控制指令，切换到手动模式
+    if (need_switch_manual)
+    {
+        Control_SetMode(MODE_MANUAL);
+    }
+    
+    // 解析阈值设置
+//    cJSON *root = cJSON_Parse(json_buf);
+//    if (root)
+//    {
+//        // 设置温度阈值
+//        cJSON *th_temp = cJSON_GetObjectItem(root, "th_temp");
+//        if (th_temp && cJSON_IsNumber(th_temp))
+//        {
+//            Control_SetThreshold(THRESHOLD_TEMP, th_temp->valueint);
+//        }
+//        
+//        // 设置环境湿度阈值
+//        cJSON *th_thm = cJSON_GetObjectItem(root, "th_thm");
+//        if (th_thm && cJSON_IsNumber(th_thm))
+//        {
+//            Control_SetThreshold(THRESHOLD_HUMIDITY, th_thm->valueint);
+//        }
+//        
+//        // 设置光照阈值
+//        cJSON *th_light = cJSON_GetObjectItem(root, "th_light");
+//        if (th_light && cJSON_IsNumber(th_light))
+//        {
+//            Control_SetThreshold(THRESHOLD_LIGHT, th_light->valueint);
+//        }
+//        
+//        // 设置土壤湿度阈值
+//        cJSON *th_soil = cJSON_GetObjectItem(root, "th_soil");
+//        if (th_soil && cJSON_IsNumber(th_soil))
+//        {
+//            Control_SetThreshold(THRESHOLD_SOIL, th_soil->valueint);
+//        }
+//        
+//        cJSON_Delete(root);
+//    }
 
     // 构造并发送回执 payload
-    HAL_UART_Transmit(&huart2, (uint8_t*)"DEBUG: Creating reply payload\r\n", 32, 100);
     char reply_payload[128];
     
     // 简单提取 id
@@ -674,10 +733,8 @@ void ESP8266_ProcessMessages(void)
     }
 
     // 发布回执
-    HAL_UART_Transmit(&huart2, (uint8_t*)"DEBUG: Publishing reply\r\n", 27, 100);
     ESP8266_MQTT_Publish(MQTT_TOPIC_SET_REPLY, reply_payload, 0, 0);
     
-    HAL_UART_Transmit(&huart2, (uint8_t*)"DEBUG: Processing complete\r\n", 28, 100);
 
 
 }

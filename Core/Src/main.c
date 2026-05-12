@@ -180,6 +180,8 @@ int main(void)
     if(Control_GetMode() == MODE_AUTO) {
         int16_t temp_threshold = Control_GetThreshold(THRESHOLD_TEMP);
         int16_t light_threshold = Control_GetThreshold(THRESHOLD_LIGHT);
+        int16_t soil_threshold = Control_GetThreshold(THRESHOLD_SOIL);
+        int16_t humidity_threshold = Control_GetThreshold(THRESHOLD_HUMIDITY);
         
         /* 温度控制：高于阈值启动风扇，低于阈值关闭风扇 */
         if(dht11_data.temp_int >= temp_threshold)
@@ -200,10 +202,33 @@ int main(void)
         {
             HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
         }
+        
+        /* 土壤湿度控制：低于阈值启动水泵浇水，高于阈值关闭水泵 */
+        if(soil_moisture_value < soil_threshold)
+        {
+            HAL_GPIO_WritePin(WATER_GPIO_Port, WATER_Pin, GPIO_PIN_SET);
+        }
+        else
+        {
+            HAL_GPIO_WritePin(WATER_GPIO_Port, WATER_Pin, GPIO_PIN_RESET);
+        }
+        
+        /* 空气湿度控制：低于阈值启动蜂鸣器提示，高于阈值关闭 */
+        if(dht11_data.humidity_int < humidity_threshold)
+        {
+            HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_SET);
+        }
+        else
+        {
+            HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_RESET);
+        }
     }
     
     /* 处理按键 */
     Control_Process();
+    
+    /* 处理MQTT消息 */
+    ESP8266_ProcessMessages();
     
     OLED_Clear();
     if(Control_GetPage() == PAGE_MAIN) {

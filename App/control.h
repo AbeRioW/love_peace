@@ -25,6 +25,8 @@ typedef enum {
 typedef enum {
     THRESHOLD_TEMP = 0,
     THRESHOLD_LIGHT,
+    THRESHOLD_SOIL,
+    THRESHOLD_HUMIDITY,
     THRESHOLD_MAX
 } Threshold_t;
 
@@ -40,11 +42,13 @@ void Control_Key2_IRQ(void);
 void Control_Key3_IRQ(void);
 void Control_Key4_IRQ(void);
 SystemMode_t Control_GetMode(void);
+void Control_SetMode(SystemMode_t mode);
 Page_t Control_GetPage(void);
 void Display_MainPage(void);
 void Display_DeviceControlPage(void);
 void Display_ThresholdSettingPage(void);
 int16_t Control_GetThreshold(Threshold_t th);
+void Control_SetThreshold(Threshold_t th, int16_t value);
 Region_t Control_GetRegion(void);
 void Control_ToggleRegion(void);
 

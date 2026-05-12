@@ -38,3 +38,4 @@ love_peace\esp8266.o: ..\App\cJSON.h
 love_peace\esp8266.o: ../Core/Inc/gpio.h
 love_peace\esp8266.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stdlib.h
 love_peace\esp8266.o: ..\App\oled.h
+love_peace\esp8266.o: ..\App\control.h
