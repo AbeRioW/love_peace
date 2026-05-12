@@ -27,6 +27,8 @@
 "love_peace\cjson.o"
 "love_peace\esp8266.o"
 "love_peace\mqtt_publisher.o"
+"love_peace\gas_sensor.o"
+"love_peace\control.o"
 --strict --scatter "love_peace\love_peace.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

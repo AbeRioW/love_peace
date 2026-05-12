@@ -5,11 +5,11 @@
 <h2>Tool Versions:</h2>
 IDE-Version: ¦ÌVision V5.38.0.0
 Copyright (C) 2022 ARM Ltd and ARM Germany GmbH. All rights reserved.
-License Information: rio Admin, rio, LIC=WHYH9-41S13-VE9HA-1P9V9-F08QJ-H7N6D
+License Information: 1 1, 1, LIC=KRMW3-ASLPY-LQ80Q-N6WG8-TK5DW-4SB27
  
 Tool Versions:
 Toolchain:       MDK-ARM Plus  Version: 5.38.0.0
-Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
+Toolchain Path:  D:\Program Files\KEIL5\ARM\ARMCC\Bin
 C Compiler:      Armcc.exe V5.06 update 6 (build 750)
 Assembler:       Armasm.exe V5.06 update 6 (build 750)
 Linker/Locator:  ArmLink.exe V5.06 update 6 (build 750)
@@ -21,44 +21,24 @@ Target DLL:      CMSIS_AGDI.dll V1.33.15.0
 Dialog DLL:      TCM.DLL V1.56.4.0
  
 <h2>Project:</h2>
-C:\Users\Admin\Desktop\love_peace\love_peace\MDK-ARM\love_peace.uvprojx
-Project File Date:  05/05/2026
+C:\Users\ypwan\Desktop\love_peace(1)\love_peace\MDK-ARM\love_peace.uvprojx
+Project File Date:  05/06/2026
 
 <h2>Output:</h2>
-*** Using Compiler 'V5.06 update 6 (build 750)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+*** Using Compiler 'V5.06 update 6 (build 750)', folder: 'D:\Program Files\KEIL5\ARM\ARMCC\Bin'
 Build target 'love_peace'
-compiling mqtt_publisher.c...
-..\App\esp8266.h(56): warning:  #1-D: last line of file ends without a newline
-  #endif /* __ESP8266_H */
-..\App\mqtt_publisher.c(9): warning:  #177-D: variable "last_pub"  was declared but never referenced
-  static uint32_t last_pub = 0;
-..\App\mqtt_publisher.c: 2 warnings, 0 errors
 compiling main.c...
 ../App/dht11.h(32): warning:  #1-D: last line of file ends without a newline
   #endif
-../App/esp8266.h(56): warning:  #1-D: last line of file ends without a newline
+../App/esp8266.h(61): warning:  #1-D: last line of file ends without a newline
   #endif /* __ESP8266_H */
-../Core/Src/main.c(75): warning:  #177-D: variable "mqtt_try"  was declared but never referenced
+../Core/Src/main.c(77): warning:  #177-D: variable "mqtt_try"  was declared but never referenced
     uint8_t wifi_try = 0, mqtt_try = 0;
 ../Core/Src/main.c: 3 warnings, 0 errors
-compiling stm32f1xx_it.c...
-../App/esp8266.h(56): warning:  #1-D: last line of file ends without a newline
-  #endif /* __ESP8266_H */
-../Core/Src/stm32f1xx_it.c: 1 warning, 0 errors
-compiling esp8266.c...
-..\App\esp8266.h(56): warning:  #1-D: last line of file ends without a newline
-  #endif /* __ESP8266_H */
-..\App\esp8266.c(305): warning:  #550-D: variable "got_response"  was set but never used
-          bool got_response = false;
-..\App\esp8266.c(700): warning:  #1-D: last line of file ends without a newline
-  //}
-..\App\esp8266.c(21): warning:  #177-D: function "ESP8266_WaitForStr"  was declared but never referenced
-  static bool ESP8266_WaitForStr(const char *str, uint32_t timeout_ms)
-..\App\esp8266.c: 4 warnings, 0 errors
 linking...
-Program Size: Code=14220 RO-data=7104 RW-data=32 ZI-data=3552  
+Program Size: Code=16140 RO-data=7152 RW-data=88 ZI-data=3688  
 FromELF: creating hex file...
-"love_peace\love_peace.axf" - 0 Error(s), 10 Warning(s).
+"love_peace\love_peace.axf" - 0 Error(s), 3 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -75,14 +55,14 @@ Package Vendor: Keil
 
 <h2>Collection of Component include folders:</h2>
   ./RTE/_love_peace
-  C:/Users/Admin/AppData/Local/Arm/Packs/ARM/CMSIS/5.9.0/CMSIS/Core/Include
-  C:/Users/Admin/AppData/Local/Arm/Packs/Keil/STM32F1xx_DFP/2.4.1/Device/Include
+  C:/Users/ypwan/AppData/Local/Arm/Packs/ARM/CMSIS/5.9.0/CMSIS/Core/Include
+  C:/Users/ypwan/AppData/Local/Arm/Packs/Keil/STM32F1xx_DFP/2.4.1/Device/Include
 
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.6.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:02
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>

@@ -23,6 +23,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "esp8266.h"
+#include "gas_sensor.h"
+#include "control.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,6 +61,7 @@
 extern DMA_HandleTypeDef hdma_usart1_rx;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -259,18 +262,64 @@ void USART1_IRQHandler(void)
   /* USER CODE END USART1_IRQn 1 */
 }
 
+/**
+  * @brief This function handles USART2 global interrupt.
+  */
+void USART2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART2_IRQn 0 */
+  if(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_RXNE))
+  {
+      uint8_t data = (uint8_t)(huart2.Instance->DR & 0xFF);
+      GasSensor_UpdateFromUART(data);
+  }
+  /* USER CODE END USART2_IRQn 0 */
+  HAL_UART_IRQHandler(&huart2);
+  /* USER CODE BEGIN USART2_IRQn 1 */
+
+  /* USER CODE END USART2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI line[15:10] interrupts.
+  */
+void EXTI15_10_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI15_10_IRQn 0 */
+
+  /* USER CODE END EXTI15_10_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(KEY1_Pin);
+  HAL_GPIO_EXTI_IRQHandler(KEY2_Pin);
+  HAL_GPIO_EXTI_IRQHandler(KEY3_Pin);
+  HAL_GPIO_EXTI_IRQHandler(KEY4_Pin);
+  /* USER CODE BEGIN EXTI15_10_IRQn 1 */
+
+  /* USER CODE END EXTI15_10_IRQn 1 */
+}
+
 /* USER CODE BEGIN 1 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	    if (huart == &huart1)
     {
-        // 计算实际接收到的字节数
         esp8266_cnt = ESP8266_BUF_SIZE - 1 - huart->RxXferCount;
         if (esp8266_cnt > 0) {
             esp8266_buf[esp8266_cnt] = '\0';
         }
-        // 重新启动 DMA 接收
         HAL_UART_Receive_DMA(&huart1, (uint8_t*)esp8266_buf, ESP8266_BUF_SIZE - 1);
+    }
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    if(GPIO_Pin == KEY1_Pin) {
+        Control_Key1_IRQ();
+    } else if(GPIO_Pin == KEY2_Pin) {
+        Control_Key2_IRQ();
+    } else if(GPIO_Pin == KEY3_Pin) {
+        Control_Key3_IRQ();
+    } else if(GPIO_Pin == KEY4_Pin) {
+        Control_Key4_IRQ();
     }
 }
 /* USER CODE END 1 */

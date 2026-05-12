@@ -7,10 +7,15 @@
 #include <string.h>
 
 // WiFi配置信息,备注WIFI模块只能连接2.4G的网路
+#if 1
 //#define WIFI_SSID       "CMCC-402-2.4G-ext"               // WiFi名称
 //#define WIFI_PASSWORD   "13851901825"            // WiFi密码
+#define WIFI_SSID       "jingda"               // WiFi名称
+#define WIFI_PASSWORD   "jd717718"            // WiFi密码
+#else
 #define WIFI_SSID       "hehe"               // WiFi名称
 #define WIFI_PASSWORD   "ydshlqssb"            // WiFi密码
+#endif
 
 // MQTT三元组信息
 #define PRODUCT_ID      "dU5jVg1L9b"          // 产品ID

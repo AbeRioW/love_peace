@@ -34,14 +34,18 @@ extern "C" {
 
 extern ADC_HandleTypeDef hadc1;
 
+extern ADC_HandleTypeDef hadc2;
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
 void MX_ADC1_Init(void);
+void MX_ADC2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 uint32_t ADC1_Read_Average(uint8_t times);
+uint32_t ADC2_Read_Average(uint8_t times);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

@@ -30,6 +30,8 @@
 #include "adc.h"
 #include "esp8266.h"
 #include "mqtt_publisher.h"
+#include "gas_sensor.h"
+#include "control.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,19 +98,23 @@ int main(void)
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
+  MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
+	  HAL_GPIO_WritePin(GPIOA, FAN_Pin|WATER_Pin, GPIO_PIN_RESET);
   OLED_Init();
   OLED_Clear();
+  GasSensor_Init();
+  Control_Init();
 	
 		ESP8266_Init();
-	  //WIFI����
+	  //WIFI连接 
   while (wifi_try < 5 && !ESP8266_ConnectWiFi())
   {
       wifi_try++;
       HAL_Delay(1000);
   }
 	
-	  //����
 	if(ESP8266_ConnectCloud()==false)
 	{
 		  while(1);
@@ -117,13 +123,13 @@ int main(void)
 	ESP8266_Clear();
 	OLED_Clear();
 	
-	//����
+
 	if(!ESP8266_MQTT_Subscribe(MQTT_TOPIC_POST_REPLY,1))
 	{
 		  while(1);
 	}
 	
-	//����
+
 		if(!ESP8266_MQTT_Subscribe(MQTT_TOPIC_SET,0))
 	{
 		  while(1);
@@ -139,8 +145,10 @@ int main(void)
     /* USER CODE BEGIN 3 */
     char temp_str[32];
     char hum_str[32];
+    static uint32_t last_mqtt_time = 0;
 
     uint16_t light_value = ADC1_Read_Average(10);
+    uint16_t soil_moisture_value = ADC2_Read_Average(10);
 
     DHT11_READ_DATA(&dht11_data);
     
@@ -148,39 +156,89 @@ int main(void)
     snprintf(temp_str, sizeof(temp_str), "%d.%d", dht11_data.temp_int, dht11_data.temp_dec);
     snprintf(hum_str, sizeof(hum_str), "%d.%d", dht11_data.humidity_int, dht11_data.humidity_dec);
     
-    /* MQTT发布数据 */
-    MQTT_Publish_temp(temp_str);
-    MQTT_Publish_humidity(hum_str);
+    /* 定时MQTT发布数据 */
+    if(HAL_GetTick() - last_mqtt_time > 5000) {
+        MQTT_Publish_temp(temp_str);
+        MQTT_Publish_humidity(hum_str);
+        last_mqtt_time = HAL_GetTick();
+    }
     
-    /* LED控制：光照强度低于600时拉低LED（点亮） */
-    if(light_value < 700)
-    {
-        HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+    /* 自动模式下的设备控制 */
+    if(Control_GetMode() == MODE_AUTO) {
+        int16_t temp_threshold = Control_GetThreshold(THRESHOLD_TEMP);
+        int16_t light_threshold = Control_GetThreshold(THRESHOLD_LIGHT);
+        
+        /* 温度控制：高于阈值启动风扇，低于阈值关闭风扇 */
+        if(dht11_data.temp_int >= temp_threshold)
+        {
+            HAL_GPIO_WritePin(FAN_GPIO_Port, FAN_Pin, GPIO_PIN_SET);
+        }
+        else
+        {
+            HAL_GPIO_WritePin(FAN_GPIO_Port, FAN_Pin, GPIO_PIN_RESET);
+        }
+        
+        /* 光照控制：低于阈值启动LED补光，高于阈值关闭LED */
+        if(light_value < light_threshold)
+        {
+            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+        }
+        else
+        {
+            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+        }
     }
-    else
-    {
-        HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-    }
+    
+    /* 处理按键 */
+    Control_Process();
     
     OLED_Clear();
-    OLED_ShowString(0, 0, (uint8_t*)"Light:", 8, 1);
-    OLED_ShowNum(50, 0, light_value, 4, 8, 1);
+    if(Control_GetPage() == PAGE_MAIN) {
+        /* 显示传感器数据 */
+        OLED_ShowString(0, 0, (uint8_t*)"Mode:", 8, 1);
+        if(Control_GetMode() == MODE_AUTO) {
+            OLED_ShowString(50, 0, (uint8_t*)"AUTO", 8, 1);
+        } else {
+            OLED_ShowString(50, 0, (uint8_t*)"MANUAL", 8, 1);
+        }
 
-    OLED_ShowString(0, 16, (uint8_t*)"Temp:", 8, 1);
-    OLED_ShowNum(50, 16, dht11_data.temp_int, 2, 8, 1);
-    OLED_ShowString(74, 16, (uint8_t*)".", 8, 1);
-    OLED_ShowNum(80, 16, dht11_data.temp_dec, 1, 8, 1);
-    OLED_ShowString(88, 16, (uint8_t*)"C", 8, 1);
-
-    OLED_ShowString(0, 32, (uint8_t*)"Hum:", 8, 1);
-    OLED_ShowNum(50, 32, dht11_data.humidity_int, 2, 8, 1);
-    OLED_ShowString(74, 32, (uint8_t*)".", 8, 1);
-    OLED_ShowNum(80, 32, dht11_data.humidity_dec, 1, 8, 1);
-    OLED_ShowString(88, 32, (uint8_t*)"%", 8, 1);
+        OLED_ShowString(0, 8, (uint8_t*)"Light:", 8, 1); 
+         OLED_ShowNum(50, 8, light_value, 4, 8, 1); 
+ 
+         OLED_ShowString(0, 16, (uint8_t*)"Soil:", 8, 1); 
+         OLED_ShowNum(50, 16, soil_moisture_value, 4, 8, 1); 
+ 
+         OLED_ShowString(0, 24, (uint8_t*)"Temp:", 8, 1); 
+         OLED_ShowNum(50, 24, dht11_data.temp_int, 2, 8, 1); 
+         OLED_ShowString(74, 24, (uint8_t*)".", 8, 1); 
+         OLED_ShowNum(80, 24, dht11_data.temp_dec, 1, 8, 1); 
+         OLED_ShowString(88, 24, (uint8_t*)"C", 8, 1); 
+ 
+         OLED_ShowString(0, 32, (uint8_t*)"Hum:", 8, 1); 
+         OLED_ShowNum(50, 32, dht11_data.humidity_int, 2, 8, 1); 
+         OLED_ShowString(74, 32, (uint8_t*)".", 8, 1); 
+         OLED_ShowNum(80, 32, dht11_data.humidity_dec, 1, 8, 1); 
+         OLED_ShowString(88, 32, (uint8_t*)"%", 8, 1); 
+ 
+         OLED_ShowString(0, 40, (uint8_t*)"CO2:", 8, 1); 
+         uint16_t co2_value = 0; 
+         if (GasSensor_GetCO2(&co2_value)) { 
+             OLED_ShowNum(50, 40, co2_value, 4, 8, 1); 
+             OLED_ShowString(90, 40, (uint8_t*)"ppm", 8, 1); 
+         } else { 
+             OLED_ShowString(50, 40, (uint8_t*)"----", 8, 1); 
+         }
+    } else if(Control_GetPage() == PAGE_DEVICE_CONTROL) {
+        /* 显示设备控制页面 */
+        Display_DeviceControlPage();
+    } else if(Control_GetPage() == PAGE_THRESHOLD_SETTING) {
+        /* 显示阈值设置页面 */
+        Display_ThresholdSettingPage();
+    }
 
     OLED_Refresh();
 
-    HAL_Delay(2000);
+    HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
