@@ -28,6 +28,11 @@ typedef enum {
     THRESHOLD_MAX
 } Threshold_t;
 
+typedef enum {
+    REGION_1 = 0,
+    REGION_2
+} Region_t;
+
 void Control_Init(void);
 void Control_Process(void);
 void Control_Key1_IRQ(void);
@@ -40,5 +45,7 @@ void Display_MainPage(void);
 void Display_DeviceControlPage(void);
 void Display_ThresholdSettingPage(void);
 int16_t Control_GetThreshold(Threshold_t th);
+Region_t Control_GetRegion(void);
+void Control_ToggleRegion(void);
 
 #endif

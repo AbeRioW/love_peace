@@ -7,6 +7,7 @@ static SystemMode_t system_mode = MODE_AUTO;
 static Page_t current_page = PAGE_MAIN;
 static Device_t selected_device = DEV_BEEP;
 static Threshold_t selected_threshold = THRESHOLD_TEMP;
+static Region_t current_region = REGION_1;
 static uint8_t device_state[DEV_MAX] = {0};
 static int16_t thresholds[THRESHOLD_MAX] = {30, 2000};
 static volatile uint8_t key1_pressed = 0;
@@ -32,6 +33,7 @@ void Control_Init(void)
     current_page = PAGE_MAIN;
     selected_device = DEV_BEEP;
     selected_threshold = THRESHOLD_TEMP;
+    current_region = REGION_1;
     memset(device_state, 0, sizeof(device_state));
     thresholds[THRESHOLD_TEMP] = 30;
     thresholds[THRESHOLD_LIGHT] = 2000;
@@ -108,7 +110,9 @@ void Control_Process(void)
     
     if(key3_pressed) {
         key3_pressed = 0;
-        if(current_page == PAGE_DEVICE_CONTROL) {
+        if(current_page == PAGE_MAIN) {
+            Control_ToggleRegion();
+        } else if(current_page == PAGE_DEVICE_CONTROL) {
             Device_Toggle(selected_device);
         } else if(current_page == PAGE_THRESHOLD_SETTING) {
             if(selected_threshold == THRESHOLD_TEMP) {
@@ -207,4 +211,14 @@ void Control_Key3_IRQ(void)
 void Control_Key4_IRQ(void)
 {
     key4_pressed = 1;
+}
+
+Region_t Control_GetRegion(void)
+{
+    return current_region;
+}
+
+void Control_ToggleRegion(void)
+{
+    current_region = (current_region == REGION_1) ? REGION_2 : REGION_1;
 }

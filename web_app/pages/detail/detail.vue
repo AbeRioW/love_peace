@@ -1,48 +1,106 @@
 <template>
 	<!-- 整体布局 -->
 	<view class="wrap">
-		<!-- 设备区域 -->
-		<view class="dev-area">
-
-			<!-- 设备卡片 - 温度 -->
-			<view class="dev-cart">
-				<view>
-					<view class="dev-name">温度</view>
-					<!-- 温度图标 -->
-					<image class="dev-logo" src="../../static/temp.png" mode=""></image>
+		<!-- 区域一 -->
+		<view class="section">
+			<view class="section-title">区域一</view>
+			<view class="dev-area">
+				<!-- 设备卡片 - 温度 -->
+				<view class="dev-cart">
+					<view>
+						<view class="dev-name">温度</view>
+						<image class="dev-logo" src="../../static/temp.png" mode=""></image>
+					</view>
+					<view class="dev-data">{{temperature}} ℃</view>
 				</view>
-				<!-- 温度数据显示 -->
-				<view class="dev-data">{{temperature}} ℃</view>
-			</view>
 
-			<!-- 设备卡片 - 湿度 -->
-			<view class="dev-cart">
-				<view>
-					<view class="dev-name">湿度</view>
-					<!-- 湿度图标 -->
-					<image class="dev-logo" src="../../static/humi.png" mode=""></image>
+				<!-- 设备卡片 - 湿度 -->
+				<view class="dev-cart">
+					<view>
+						<view class="dev-name">湿度</view>
+						<image class="dev-logo" src="../../static/humi.png" mode=""></image>
+					</view>
+					<view class="dev-data">{{humidity}} %</view>
 				</view>
-				<!-- 湿度数据显示 -->
-				<view class="dev-data">{{humi}} %</view>
-			</view>
-	
-			<!-- 设备卡片 - MQ5 -->
-			<view class="dev-cart">
-				<view>
-					<view class="dev-name">天然气</view>
-					<image class="dev-logo" src="../../static/MQ5.png" mode=""></image>
+
+				<!-- 设备卡片 - CO2 -->
+				<view class="dev-cart">
+					<view>
+						<view class="dev-name">CO2</view>
+						<image class="dev-logo" src="../../static/co2.png" mode=""></image>
+					</view>
+					<view class="dev-data">{{CO2}}</view>
 				</view>
-				<view class="dev-data">{{mq5}}</view>
+
+				<!-- 设备卡片 - 光照 -->
+				<view class="dev-cart">
+					<view>
+						<view class="dev-name">光照</view>
+						<image class="dev-logo" src="../../static/lamp.png" mode=""></image>
+					</view>
+					<view class="dev-data">{{light}}</view>
+				</view>
+
+				<!-- 设备卡片 - 土壤湿度 -->
+				<view class="dev-cart">
+					<view>
+						<view class="dev-name">土壤湿度</view>
+						<image class="dev-logo" src="../../static/humi.png" mode=""></image>
+					</view>
+					<view class="dev-data">{{soil}} %</view>
+				</view>
 			</view>
+		</view>
 
+		<!-- 区域二 -->
+		<view class="section">
+			<view class="section-title">区域二</view>
+			<view class="dev-area">
+				<!-- 设备卡片 - 温度1 -->
+				<view class="dev-cart">
+					<view>
+						<view class="dev-name">温度</view>
+						<image class="dev-logo" src="../../static/temp.png" mode=""></image>
+					</view>
+					<view class="dev-data">{{temperature1}} ℃</view>
+				</view>
 
+				<!-- 设备卡片 - 湿度1 -->
+				<view class="dev-cart">
+					<view>
+						<view class="dev-name">湿度</view>
+						<image class="dev-logo" src="../../static/humi.png" mode=""></image>
+					</view>
+					<view class="dev-data">{{humidity1}} %</view>
+				</view>
 
-			<!-- 状态显示区域 -->
-			<!--<view class="current-action">
-				<text>当前动作: {{currentAction}}</text>
-				<text>; 变量 Car_flag: {{Car_flag}}</text>
-			</view>-->
+				<!-- 设备卡片 - CO21 -->
+				<view class="dev-cart">
+					<view>
+						<view class="dev-name">CO2</view>
+						<image class="dev-logo" src="../../static/co2.png" mode=""></image>
+					</view>
+					<view class="dev-data">{{CO21}}</view>
+				</view>
 
+				<!-- 设备卡片 - 光照1 -->
+				<view class="dev-cart">
+					<view>
+						<view class="dev-name">光照</view>
+						<image class="dev-logo" src="../../static/lamp.png" mode=""></image>
+					</view>
+					<view class="dev-data">{{light1}}</view>
+				</view>
+
+				<!-- 设备卡片 - 土壤湿度1 -->
+				<view class="dev-cart">
+					<view>
+						<view class="dev-name">土壤湿度</view>
+						<image class="dev-logo" src="../../static/humi.png" mode=""></image>
+					</view>
+					<view class="dev-data">{{soil1}} %</view>
+				</view>
+			</view>
 		</view>
 		
 		<!-- 运动控制区域 -->
@@ -51,7 +109,6 @@
 				<button class="move-button" @click="move(5)">语音报警</button>
 				<button class="move-button" :class="{'buzzer-on': buzzer}" @click="toggleBuzzer">蜂鸣器报警</button>
 			</view>
-
 		</view>
 	</view>
 </template>
@@ -75,10 +132,18 @@
 		// 数据部分
 		data() {
 			return {
-				// 温度、湿度状态
+				// 区域一数据
 				temperature: '--',
-				humi: '--',
-				mq5: '--',
+				humidity: '--',
+				CO2: '--',
+				light: '--',
+				soil: '--',
+				// 区域二数据
+				temperature1: '--',
+				humidity1: '--',
+				CO21: '--',
+				light1: '--',
+				soil1: '--',
 				// 接口请求token
 				token: '',
 				// 湿度和温度的阈值
@@ -165,10 +230,31 @@
 										this.temperature = item.value;
 										break;
 									case 'humidity':
-										this.humi = item.value;
+										this.humidity = item.value;
 										break;
-									case 'MQ5':
-										this.mq5 = item.value;
+									case 'CO2':
+										this.CO2 = item.value;
+										break;
+									case 'light':
+										this.light = item.value;
+										break;
+									case 'soil':
+										this.soil = item.value;
+										break;
+									case 'temperature1':
+										this.temperature1 = item.value;
+										break;
+									case 'humidity1':
+										this.humidity1 = item.value;
+										break;
+									case 'CO21':
+										this.CO21 = item.value;
+										break;
+									case 'light1':
+										this.light1 = item.value;
+										break;
+									case 'soil1':
+										this.soil1 = item.value;
 										break;
 								}
 							});
@@ -294,6 +380,25 @@
 		padding: 30rpx;
 		background-color: #4a90d9;
 		min-height: 100vh;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+	}
+
+	/* 区域样式 */
+	.section {
+		width: calc(50% - 15rpx);
+		margin-bottom: 40rpx;
+	}
+
+	/* 区域标题样式 */
+	.section-title {
+		font-size: 32rpx;
+		font-weight: bold;
+		color: #fff;
+		margin-bottom: 20rpx;
+		padding-left: 10rpx;
+		border-left: 8rpx solid #fff;
 	}
 
 	/* 设备区域样式 */
@@ -308,22 +413,14 @@
 
 	/* 设备卡片样式 */
 	.dev-cart {
-		height: 150rpx;
-		/* 设置高度为150像素 */
-		width: 320rpx;
-		/* 设置宽度为320像素 */
-		border-radius: 30rpx;
-		/* 设置边框圆角为30像素 */
-		margin-top: 30rpx;
-		/* 设置上外边距为30像素 */
+		height: 100rpx;
+		width: calc(50% - 10rpx);
+		border-radius: 20rpx;
+		margin-top: 15rpx;
 		display: flex;
-		/* 使用弹性盒子布局 */
 		justify-content: space-around;
-		/* 在弹性容器中均匀分布子元素，两端对齐 */
 		align-items: center;
-		/* 在弹性容器中垂直居中对齐子元素 */
-		box-shadow: 0 0 15rpx #ccc;
-		/* 设置盒子阴影，颜色为灰色 */
+		box-shadow: 0 0 10rpx #ccc;
 	}
 
 	/* 长设备卡片样式 */
@@ -358,20 +455,15 @@
 
 	/* 设备图标样式 */
 	.dev-logo {
-		width: 70rpx;
-		/* 设置宽度为70像素 */
-		height: 70rpx;
-		/* 设置高度为70像素 */
-		margin-top: 10rpx;
-		/* 设置上外边距为10像素 */
+		width: 40rpx;
+		height: 40rpx;
+		margin-top: 8rpx;
 	}
 
 	/* 设备数据样式 */
 	.dev-data {
-		font-size: 50rpx;
-		/* 设置字体大小为50像素 */
+		font-size: 28rpx;
 		color: #6d6d6d;
-		/* 字体颜色为灰色 */
 	}
 
 	/* 滑动条样式 */

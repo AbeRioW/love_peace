@@ -145,6 +145,8 @@ int main(void)
     /* USER CODE BEGIN 3 */
     char temp_str[32];
     char hum_str[32];
+    char light_str[32];
+    char soil_str[32];
     static uint32_t last_mqtt_time = 0;
 
     uint16_t light_value = ADC1_Read_Average(10);
@@ -152,14 +154,25 @@ int main(void)
 
     DHT11_READ_DATA(&dht11_data);
     
-    /* 格式化温度和湿度数据 */
+    /* 格式化数据 */
     snprintf(temp_str, sizeof(temp_str), "%d.%d", dht11_data.temp_int, dht11_data.temp_dec);
     snprintf(hum_str, sizeof(hum_str), "%d.%d", dht11_data.humidity_int, dht11_data.humidity_dec);
+    snprintf(light_str, sizeof(light_str), "%d", light_value);
+    snprintf(soil_str, sizeof(soil_str), "%d", soil_moisture_value);
     
     /* 定时MQTT发布数据 */
     if(HAL_GetTick() - last_mqtt_time > 5000) {
-        MQTT_Publish_temp(temp_str);
-        MQTT_Publish_humidity(hum_str);
+        if(Control_GetRegion() == REGION_1) {
+            MQTT_Publish_Data("temperature", temp_str);
+            MQTT_Publish_Data("humidity", hum_str);
+            MQTT_Publish_Data("light", light_str);
+            MQTT_Publish_Data("soil", soil_str);
+        } else {
+            MQTT_Publish_Data("temperature1", temp_str);
+            MQTT_Publish_Data("humidity1", hum_str);
+            MQTT_Publish_Data("light1", light_str);
+            MQTT_Publish_Data("soil1", soil_str);
+        }
         last_mqtt_time = HAL_GetTick();
     }
     
@@ -178,8 +191,8 @@ int main(void)
             HAL_GPIO_WritePin(FAN_GPIO_Port, FAN_Pin, GPIO_PIN_RESET);
         }
         
-        /* 光照控制：低于阈值启动LED补光，高于阈值关闭LED */
-        if(light_value < light_threshold)
+        /* 光照控制：大于阈值启动LED，小于阈值关闭LED */
+        if(light_value >= light_threshold)
         {
             HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
         }
@@ -195,38 +208,45 @@ int main(void)
     OLED_Clear();
     if(Control_GetPage() == PAGE_MAIN) {
         /* 显示传感器数据 */
-        OLED_ShowString(0, 0, (uint8_t*)"Mode:", 8, 1);
-        if(Control_GetMode() == MODE_AUTO) {
-            OLED_ShowString(50, 0, (uint8_t*)"AUTO", 8, 1);
+        OLED_ShowString(0, 0, (uint8_t*)"Region:", 8, 1);
+        if(Control_GetRegion() == REGION_1) {
+            OLED_ShowString(50, 0, (uint8_t*)"REGION1", 8, 1);
         } else {
-            OLED_ShowString(50, 0, (uint8_t*)"MANUAL", 8, 1);
+            OLED_ShowString(50, 0, (uint8_t*)"REGION2", 8, 1);
+        }
+        
+        OLED_ShowString(0, 8, (uint8_t*)"Mode:", 8, 1);
+        if(Control_GetMode() == MODE_AUTO) {
+            OLED_ShowString(50, 8, (uint8_t*)"AUTO", 8, 1);
+        } else {
+            OLED_ShowString(50, 8, (uint8_t*)"MANUAL", 8, 1);
         }
 
-        OLED_ShowString(0, 8, (uint8_t*)"Light:", 8, 1); 
-         OLED_ShowNum(50, 8, light_value, 4, 8, 1); 
+        OLED_ShowString(0, 16, (uint8_t*)"Light:", 8, 1); 
+         OLED_ShowNum(50, 16, light_value, 4, 8, 1); 
  
-         OLED_ShowString(0, 16, (uint8_t*)"Soil:", 8, 1); 
-         OLED_ShowNum(50, 16, soil_moisture_value, 4, 8, 1); 
+         OLED_ShowString(0, 24, (uint8_t*)"Soil:", 8, 1); 
+         OLED_ShowNum(50, 24, soil_moisture_value, 4, 8, 1); 
  
-         OLED_ShowString(0, 24, (uint8_t*)"Temp:", 8, 1); 
-         OLED_ShowNum(50, 24, dht11_data.temp_int, 2, 8, 1); 
-         OLED_ShowString(74, 24, (uint8_t*)".", 8, 1); 
-         OLED_ShowNum(80, 24, dht11_data.temp_dec, 1, 8, 1); 
-         OLED_ShowString(88, 24, (uint8_t*)"C", 8, 1); 
- 
-         OLED_ShowString(0, 32, (uint8_t*)"Hum:", 8, 1); 
-         OLED_ShowNum(50, 32, dht11_data.humidity_int, 2, 8, 1); 
+         OLED_ShowString(0, 32, (uint8_t*)"Temp:", 8, 1); 
+         OLED_ShowNum(50, 32, dht11_data.temp_int, 2, 8, 1); 
          OLED_ShowString(74, 32, (uint8_t*)".", 8, 1); 
-         OLED_ShowNum(80, 32, dht11_data.humidity_dec, 1, 8, 1); 
-         OLED_ShowString(88, 32, (uint8_t*)"%", 8, 1); 
+         OLED_ShowNum(80, 32, dht11_data.temp_dec, 1, 8, 1); 
+         OLED_ShowString(88, 32, (uint8_t*)"C", 8, 1); 
  
-         OLED_ShowString(0, 40, (uint8_t*)"CO2:", 8, 1); 
+         OLED_ShowString(0, 40, (uint8_t*)"Hum:", 8, 1); 
+         OLED_ShowNum(50, 40, dht11_data.humidity_int, 2, 8, 1); 
+         OLED_ShowString(74, 40, (uint8_t*)".", 8, 1); 
+         OLED_ShowNum(80, 40, dht11_data.humidity_dec, 1, 8, 1); 
+         OLED_ShowString(88, 40, (uint8_t*)"%", 8, 1); 
+ 
+         OLED_ShowString(0, 48, (uint8_t*)"CO2:", 8, 1); 
          uint16_t co2_value = 0; 
          if (GasSensor_GetCO2(&co2_value)) { 
-             OLED_ShowNum(50, 40, co2_value, 4, 8, 1); 
-             OLED_ShowString(90, 40, (uint8_t*)"ppm", 8, 1); 
+             OLED_ShowNum(50, 48, co2_value, 4, 8, 1); 
+             OLED_ShowString(90, 48, (uint8_t*)"ppm", 8, 1); 
          } else { 
-             OLED_ShowString(50, 40, (uint8_t*)"----", 8, 1); 
+             OLED_ShowString(50, 48, (uint8_t*)"----", 8, 1); 
          }
     } else if(Control_GetPage() == PAGE_DEVICE_CONTROL) {
         /* 显示设备控制页面 */

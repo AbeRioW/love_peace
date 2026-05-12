@@ -98,4 +98,16 @@ void MQTT_Publish_mq5(const char* value)
     MQTT_Publish_Data("MQ5", value);
 }
 
+// 发布光照值
+void MQTT_Publish_light(const char* value)
+{
+    MQTT_Publish_Data("light", value);
+}
+
+// 发布土壤湿度值
+void MQTT_Publish_soil(const char* value)
+{
+    MQTT_Publish_Data("soil", value);
+}
+
 
