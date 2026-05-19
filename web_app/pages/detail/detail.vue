@@ -138,7 +138,7 @@
 
 			<!-- 土壤湿度阈值 -->
 			<view class="threshold-item">
-				<input class="threshold-input" type="number" placeholder="土壤湿度阈值(0-4900)" v-model="thSoil" :maxlength="4" />
+				<input class="threshold-input" type="number" placeholder="土壤湿度阈值(0-99)" v-model="thSoil" :maxlength="2" />
 				<button class="threshold-button" @click="setThSoil">设置土壤湿度</button>
 			</view>
 
@@ -530,8 +530,8 @@
 			// 设置土壤湿度阈值
 			setThSoil() {
 				let value = parseInt(this.thSoil);
-				if (isNaN(value) || value < 0 || value > 4900) {
-					uni.showToast({ title: '请输入0-4900的数值', icon: 'none' });
+				if (isNaN(value) || value < 0 || value > 99) {
+					uni.showToast({ title: '请输入0-99的数值', icon: 'none' });
 					return;
 				}
 				uni.request({

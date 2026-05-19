@@ -1,6 +1,6 @@
 love_peace\gas_sensor.o: ..\App\gas_sensor.c
 love_peace\gas_sensor.o: ..\App\gas_sensor.h
-love_peace\gas_sensor.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+love_peace\gas_sensor.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stdint.h
 love_peace\gas_sensor.o: ../Core/Inc/usart.h
 love_peace\gas_sensor.o: ../Core/Inc/main.h
 love_peace\gas_sensor.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
@@ -16,7 +16,7 @@ love_peace\gas_sensor.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 love_peace\gas_sensor.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/system_stm32f1xx.h
 love_peace\gas_sensor.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 love_peace\gas_sensor.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h
-love_peace\gas_sensor.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+love_peace\gas_sensor.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\stddef.h
 love_peace\gas_sensor.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc_ex.h
 love_peace\gas_sensor.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio.h
 love_peace\gas_sensor.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_gpio_ex.h
@@ -30,4 +30,4 @@ love_peace\gas_sensor.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash
 love_peace\gas_sensor.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h
 love_peace\gas_sensor.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 love_peace\gas_sensor.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
-love_peace\gas_sensor.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+love_peace\gas_sensor.o: D:\Program Files\KEIL5\ARM\ARMCC\Bin\..\include\string.h

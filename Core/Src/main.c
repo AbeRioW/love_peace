@@ -152,7 +152,8 @@ int main(void)
 
     uint16_t light_adc_raw = ADC1_Read_Average(10);
     uint16_t light_value = 100 - ((100 * light_adc_raw) / 4096);
-    uint16_t soil_moisture_value = ADC2_Read_Average(10);
+    uint16_t soil_adc_raw = ADC2_Read_Average(10);
+    uint16_t soil_moisture_value = 100 - ((100 * soil_adc_raw) / 4096);
 
     DHT11_READ_DATA(&dht11_data);
     
@@ -204,17 +205,17 @@ int main(void)
         uint8_t beep_triggered = 0;
         if(dht11_data.temp_int >= temp_threshold) beep_triggered = 1;
         if(dht11_data.humidity_int >= humidity_threshold) beep_triggered = 1;
-        if(soil_moisture_value >= soil_threshold) beep_triggered = 1;
+        if(soil_moisture_value <= soil_threshold) beep_triggered = 1;
         if(co2_val != 0xFFFF && co2_val >= co2_threshold) beep_triggered = 1;
         if(light_value > light_threshold) beep_triggered = 1;
         
         if(beep_triggered)
         {
-            HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_SET);
+           // HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_SET);
         }
         else
         {
-            HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_RESET);
+            //HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_RESET);
         }
         
         /* 光照控制：光照百分比小于阈值时启动LED补光，大于等于阈值时关闭LED */
@@ -227,8 +228,8 @@ int main(void)
             HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
         }
         
-        /* 水泵控制：土壤湿度高于阈值时启动水泵，低于阈值时关闭 */
-        if(soil_moisture_value >= soil_threshold)
+        /* 水泵控制：土壤湿度百分比小于等于阈值时启动水泵，大于阈值时关闭 */
+        if(soil_moisture_value <= soil_threshold)
         {
             if(!water_pump_started)
             {
@@ -285,10 +286,12 @@ int main(void)
         }
 
         OLED_ShowString(0, 16, (uint8_t*)"Light:", 8, 1); 
-         OLED_ShowNum(50, 16, light_value, 4, 8, 1); 
+         OLED_ShowNum(50, 16, light_value, 2, 8, 1); 
+         OLED_ShowString(74, 16, (uint8_t*)"%", 8, 1); 
  
          OLED_ShowString(0, 24, (uint8_t*)"Soil:", 8, 1); 
-         OLED_ShowNum(50, 24, soil_moisture_value, 4, 8, 1); 
+         OLED_ShowNum(50, 24, soil_moisture_value, 2, 8, 1); 
+         OLED_ShowString(74, 24, (uint8_t*)"%", 8, 1); 
  
          OLED_ShowString(0, 32, (uint8_t*)"Temp:", 8, 1); 
          OLED_ShowNum(50, 32, dht11_data.temp_int, 2, 8, 1); 

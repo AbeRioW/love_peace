@@ -1,6 +1,7 @@
 #include "control.h"
 #include "main.h"
 #include "oled.h"
+#include "flash_storage.h"
 #include <string.h>
 
 static SystemMode_t system_mode = MODE_AUTO;
@@ -30,6 +31,18 @@ static const char *threshold_names[THRESHOLD_MAX] = {
     "CO2  "
 };
 
+static void SaveThresholdsToFlash(void)
+{
+    FlashStorageData_t data;
+    data.magic = FLASH_STORAGE_MAGIC;
+    for (int i = 0; i < THRESHOLD_MAX; i++) {
+        data.thresholds[i] = thresholds[i];
+    }
+    data.crc = 0;
+    data.crc = FlashStorage_CalculateCRC(&data);
+    FlashStorage_SaveData(&data);
+}
+
 void Control_Init(void)
 {
     system_mode = MODE_AUTO;
@@ -38,11 +51,24 @@ void Control_Init(void)
     selected_threshold = THRESHOLD_TEMP;
     current_region = REGION_1;
     memset(device_state, 0, sizeof(device_state));
-   thresholds[THRESHOLD_TEMP] = 30;
-    thresholds[THRESHOLD_LIGHT] = 50;
-    thresholds[THRESHOLD_SOIL] = 2000;
-    thresholds[THRESHOLD_HUMIDITY] = 80;
-    thresholds[THRESHOLD_CO2] = 2000;
+    
+    FlashStorage_Init();
+    
+    FlashStorageData_t data;
+    if (FlashStorage_ReadData(&data)) {
+        // 从flash读取成功，使用保存的阈值
+        for (int i = 0; i < THRESHOLD_MAX; i++) {
+            thresholds[i] = data.thresholds[i];
+        }
+    } else {
+        // 读取失败，使用默认阈值并保存
+        thresholds[THRESHOLD_TEMP] = 30;
+        thresholds[THRESHOLD_LIGHT] = 50;
+        thresholds[THRESHOLD_SOIL] = 40;
+        thresholds[THRESHOLD_HUMIDITY] = 80;
+        thresholds[THRESHOLD_CO2] = 2000;
+        SaveThresholdsToFlash();
+    }
 }
 
 SystemMode_t Control_GetMode(void)
@@ -77,7 +103,7 @@ void Device_SetState(Device_t dev, uint8_t state)
     device_state[dev] = state;
     switch(dev) {
         case DEV_BEEP:
-            HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, state ? GPIO_PIN_RESET : GPIO_PIN_SET);
+            //HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, state ? GPIO_PIN_RESET : GPIO_PIN_SET);
             break;
         case DEV_LED:
             HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, state ? GPIO_PIN_RESET : GPIO_PIN_SET);
@@ -133,26 +159,35 @@ void Control_Process(void)
         } else if(current_page == PAGE_DEVICE_CONTROL) {
             Device_Toggle(selected_device);
         } else if(current_page == PAGE_THRESHOLD_SETTING) {
+            uint8_t changed = 0;
             if(selected_threshold == THRESHOLD_TEMP) {
                 if(thresholds[selected_threshold] < 100) {
                     thresholds[selected_threshold]++;
+                    changed = 1;
                 }
             } else if(selected_threshold == THRESHOLD_LIGHT) {
                 if(thresholds[selected_threshold] < 100) {
                     thresholds[selected_threshold] += 5;
+                    changed = 1;
                 }
             } else if(selected_threshold == THRESHOLD_SOIL) {
-                if(thresholds[selected_threshold] < 4095) {
-                    thresholds[selected_threshold] += 100;
+                if(thresholds[selected_threshold] < 100) {
+                    thresholds[selected_threshold] += 5;
+                    changed = 1;
                 }
             } else if(selected_threshold == THRESHOLD_HUMIDITY) {
                 if(thresholds[selected_threshold] < 100) {
                     thresholds[selected_threshold]++;
+                    changed = 1;
                 }
             } else if(selected_threshold == THRESHOLD_CO2) {
                 if(thresholds[selected_threshold] < 5000) {
                     thresholds[selected_threshold] += 100;
+                    changed = 1;
                 }
+            }
+            if(changed) {
+                SaveThresholdsToFlash();
             }
         }
     }
@@ -160,27 +195,32 @@ void Control_Process(void)
     if(key4_pressed) {
         key4_pressed = 0;
         if(current_page == PAGE_THRESHOLD_SETTING) {
+            uint8_t changed = 0;
             if(selected_threshold == THRESHOLD_TEMP) {
                 if(thresholds[selected_threshold] > 0) {
                     thresholds[selected_threshold]--;
+                    changed = 1;
                 }
             } else if(selected_threshold == THRESHOLD_LIGHT) {
                 if(thresholds[selected_threshold] > 0) {
-                    thresholds[selected_threshold] -= 100;
+                    thresholds[selected_threshold] -= 5;
                     if(thresholds[selected_threshold] < 0) {
                         thresholds[selected_threshold] = 0;
                     }
+                    changed = 1;
                 }
             } else if(selected_threshold == THRESHOLD_SOIL) {
                 if(thresholds[selected_threshold] > 0) {
-                    thresholds[selected_threshold] -= 100;
+                    thresholds[selected_threshold] -= 5;
                     if(thresholds[selected_threshold] < 0) {
                         thresholds[selected_threshold] = 0;
                     }
+                    changed = 1;
                 }
             } else if(selected_threshold == THRESHOLD_HUMIDITY) {
                 if(thresholds[selected_threshold] > 0) {
                     thresholds[selected_threshold]--;
+                    changed = 1;
                 }
             } else if(selected_threshold == THRESHOLD_CO2) {
                 if(thresholds[selected_threshold] > 0) {
@@ -188,7 +228,11 @@ void Control_Process(void)
                     if(thresholds[selected_threshold] < 0) {
                         thresholds[selected_threshold] = 0;
                     }
+                    changed = 1;
                 }
+            }
+            if(changed) {
+                SaveThresholdsToFlash();
             }
         }
     }
@@ -245,7 +289,8 @@ void Display_ThresholdSettingPage(void)
             OLED_ShowNum(54, y, thresholds[i], 2, 8, 1);
             OLED_ShowString(70, y, (uint8_t*)"%", 8, 1);
         } else if(i == THRESHOLD_SOIL) {
-            OLED_ShowNum(54, y, thresholds[i], 4, 8, 1);
+            OLED_ShowNum(54, y, thresholds[i], 2, 8, 1);
+            OLED_ShowString(70, y, (uint8_t*)"%", 8, 1);
         } else if(i == THRESHOLD_CO2) {
             OLED_ShowNum(54, y, thresholds[i], 4, 8, 1);
             OLED_ShowString(86, y, (uint8_t*)"ppm", 8, 1);
