@@ -666,40 +666,66 @@ void ESP8266_ProcessMessages(void)
         Control_SetMode(MODE_MANUAL);
     }
     
-    // 解析阈值设置
-//    cJSON *root = cJSON_Parse(json_buf);
-//    if (root)
-//    {
-//        // 设置温度阈值
-//        cJSON *th_temp = cJSON_GetObjectItem(root, "th_temp");
-//        if (th_temp && cJSON_IsNumber(th_temp))
-//        {
-//            Control_SetThreshold(THRESHOLD_TEMP, th_temp->valueint);
-//        }
-//        
-//        // 设置环境湿度阈值
-//        cJSON *th_thm = cJSON_GetObjectItem(root, "th_thm");
-//        if (th_thm && cJSON_IsNumber(th_thm))
-//        {
-//            Control_SetThreshold(THRESHOLD_HUMIDITY, th_thm->valueint);
-//        }
-//        
-//        // 设置光照阈值
-//        cJSON *th_light = cJSON_GetObjectItem(root, "th_light");
-//        if (th_light && cJSON_IsNumber(th_light))
-//        {
-//            Control_SetThreshold(THRESHOLD_LIGHT, th_light->valueint);
-//        }
-//        
-//        // 设置土壤湿度阈值
-//        cJSON *th_soil = cJSON_GetObjectItem(root, "th_soil");
-//        if (th_soil && cJSON_IsNumber(th_soil))
-//        {
-//            Control_SetThreshold(THRESHOLD_SOIL, th_soil->valueint);
-//        }
-//        
-//        cJSON_Delete(root);
-//    }
+    // 解析阈值设置（使用strstr方式避免动态内存分配）
+    // 设置温度阈值
+    char *th_temp_str = strstr(json_buf, "\"th_temp\":");
+    if (th_temp_str)
+    {
+        th_temp_str += 10; // 跳过 "\"th_temp\":"
+        while (*th_temp_str == ' ' || *th_temp_str == '\t') th_temp_str++;
+        int th_temp_val = atoi(th_temp_str);
+        if (th_temp_val != 0 || *th_temp_str == '0') {
+            Control_SetThreshold(THRESHOLD_TEMP, th_temp_val);
+        }
+    }
+    
+    // 设置环境湿度阈值
+    char *th_hum_str = strstr(json_buf, "\"th_thm\":");
+    if (th_hum_str)
+    {
+        th_hum_str += 9; // 跳过 "\"th_thm\":"
+        while (*th_hum_str == ' ' || *th_hum_str == '\t') th_hum_str++;
+        int th_hum_val = atoi(th_hum_str);
+        if (th_hum_val != 0 || *th_hum_str == '0') {
+            Control_SetThreshold(THRESHOLD_HUMIDITY, th_hum_val);
+        }
+    }
+    
+    // 设置光照阈值
+    char *th_light_str = strstr(json_buf, "\"th_light\":");
+    if (th_light_str)
+    {
+        th_light_str += 11; // 跳过 "\"th_light\":"
+        while (*th_light_str == ' ' || *th_light_str == '\t') th_light_str++;
+        int th_light_val = atoi(th_light_str);
+        if (th_light_val != 0 || *th_light_str == '0') {
+            Control_SetThreshold(THRESHOLD_LIGHT, th_light_val);
+        }
+    }
+    
+    // 设置土壤湿度阈值
+    char *th_soil_str = strstr(json_buf, "\"th_soil\":");
+    if (th_soil_str)
+    {
+        th_soil_str += 10; // 跳过 "\"th_soil\":"
+        while (*th_soil_str == ' ' || *th_soil_str == '\t') th_soil_str++;
+        int th_soil_val = atoi(th_soil_str);
+        if (th_soil_val != 0 || *th_soil_str == '0') {
+            Control_SetThreshold(THRESHOLD_SOIL, th_soil_val);
+        }
+    }
+    
+    // 设置CO2阈值
+    char *co2_th_str = strstr(json_buf, "\"co2_th\":");
+    if (co2_th_str)
+    {
+        co2_th_str += 9; // 跳过 "\"co2_th\":"
+        while (*co2_th_str == ' ' || *co2_th_str == '\t') co2_th_str++;
+        int co2_th_val = atoi(co2_th_str);
+        if (co2_th_val != 0 || *co2_th_str == '0') {
+            Control_SetThreshold(THRESHOLD_CO2, co2_th_val);
+        }
+    }
 
     // 构造并发送回执 payload
     char reply_payload[128];

@@ -27,6 +27,7 @@ typedef enum {
     THRESHOLD_LIGHT,
     THRESHOLD_SOIL,
     THRESHOLD_HUMIDITY,
+    THRESHOLD_CO2,
     THRESHOLD_MAX
 } Threshold_t;
 

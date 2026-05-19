@@ -9,7 +9,7 @@ static Device_t selected_device = DEV_BEEP;
 static Threshold_t selected_threshold = THRESHOLD_TEMP;
 static Region_t current_region = REGION_1;
 static uint8_t device_state[DEV_MAX] = {0};
-static int16_t thresholds[THRESHOLD_MAX] = {30, 2000, 2000, 80};
+static int16_t thresholds[THRESHOLD_MAX] = {30, 2000, 2000, 80, 2000};
 static volatile uint8_t key1_pressed = 0;
 static volatile uint8_t key2_pressed = 0;
 static volatile uint8_t key3_pressed = 0;
@@ -26,7 +26,8 @@ static const char *threshold_names[THRESHOLD_MAX] = {
     "Temp",
     "Light",
     "Soil",
-    "Hum  "
+    "Hum  ",
+    "CO2  "
 };
 
 void Control_Init(void)
@@ -37,10 +38,11 @@ void Control_Init(void)
     selected_threshold = THRESHOLD_TEMP;
     current_region = REGION_1;
     memset(device_state, 0, sizeof(device_state));
-    thresholds[THRESHOLD_TEMP] = 30;
-    thresholds[THRESHOLD_LIGHT] = 2000;
+   thresholds[THRESHOLD_TEMP] = 30;
+    thresholds[THRESHOLD_LIGHT] = 50;
     thresholds[THRESHOLD_SOIL] = 2000;
     thresholds[THRESHOLD_HUMIDITY] = 80;
+    thresholds[THRESHOLD_CO2] = 2000;
 }
 
 SystemMode_t Control_GetMode(void)
@@ -136,8 +138,8 @@ void Control_Process(void)
                     thresholds[selected_threshold]++;
                 }
             } else if(selected_threshold == THRESHOLD_LIGHT) {
-                if(thresholds[selected_threshold] < 4095) {
-                    thresholds[selected_threshold] += 100;
+                if(thresholds[selected_threshold] < 100) {
+                    thresholds[selected_threshold] += 5;
                 }
             } else if(selected_threshold == THRESHOLD_SOIL) {
                 if(thresholds[selected_threshold] < 4095) {
@@ -146,6 +148,10 @@ void Control_Process(void)
             } else if(selected_threshold == THRESHOLD_HUMIDITY) {
                 if(thresholds[selected_threshold] < 100) {
                     thresholds[selected_threshold]++;
+                }
+            } else if(selected_threshold == THRESHOLD_CO2) {
+                if(thresholds[selected_threshold] < 5000) {
+                    thresholds[selected_threshold] += 100;
                 }
             }
         }
@@ -175,6 +181,13 @@ void Control_Process(void)
             } else if(selected_threshold == THRESHOLD_HUMIDITY) {
                 if(thresholds[selected_threshold] > 0) {
                     thresholds[selected_threshold]--;
+                }
+            } else if(selected_threshold == THRESHOLD_CO2) {
+                if(thresholds[selected_threshold] > 0) {
+                    thresholds[selected_threshold] -= 100;
+                    if(thresholds[selected_threshold] < 0) {
+                        thresholds[selected_threshold] = 0;
+                    }
                 }
             }
         }
@@ -212,20 +225,30 @@ void Display_DeviceControlPage(void)
 
 void Display_ThresholdSettingPage(void)
 {
-    OLED_ShowString(0, 0, (uint8_t*)"Threshold Setting", 8, 1);
+    OLED_ShowString(0, 0, (uint8_t*)"Threshold", 8, 1);
+    OLED_ShowString(64, 0, (uint8_t*)"Value", 8, 1);
     
     for(int i = 0; i < THRESHOLD_MAX; i++) {
-        uint8_t y = 16 + i * 12;
+        uint8_t y = 12 + i * 10;
         if(i == selected_threshold) {
             OLED_ShowString(0, y, (uint8_t*)">", 8, 1);
         }
         OLED_ShowString(10, y, (uint8_t*)threshold_names[i], 8, 1);
-        OLED_ShowString(60, y, (uint8_t*)":", 8, 1);
-        if(i == THRESHOLD_TEMP || i == THRESHOLD_HUMIDITY) {
-            OLED_ShowNum(70, y, thresholds[i], 3, 8, 1);
-            OLED_ShowString(94, y, (i == THRESHOLD_TEMP) ? (uint8_t*)"C" : (uint8_t*)"%", 8, 1);
-        } else {
-            OLED_ShowNum(70, y, thresholds[i], 4, 8, 1);
+        OLED_ShowString(44, y, (uint8_t*)":", 8, 1);
+        if(i == THRESHOLD_TEMP) {
+            OLED_ShowNum(54, y, thresholds[i], 2, 8, 1);
+            OLED_ShowString(70, y, (uint8_t*)"C", 8, 1);
+        } else if(i == THRESHOLD_HUMIDITY) {
+            OLED_ShowNum(54, y, thresholds[i], 2, 8, 1);
+            OLED_ShowString(70, y, (uint8_t*)"%", 8, 1);
+        } else if(i == THRESHOLD_LIGHT) {
+            OLED_ShowNum(54, y, thresholds[i], 2, 8, 1);
+            OLED_ShowString(70, y, (uint8_t*)"%", 8, 1);
+        } else if(i == THRESHOLD_SOIL) {
+            OLED_ShowNum(54, y, thresholds[i], 4, 8, 1);
+        } else if(i == THRESHOLD_CO2) {
+            OLED_ShowNum(54, y, thresholds[i], 4, 8, 1);
+            OLED_ShowString(86, y, (uint8_t*)"ppm", 8, 1);
         }
     }
 }

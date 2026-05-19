@@ -23,10 +23,10 @@
 					<view class="dev-data">{{humidity}} %</view>
 				</view>
 
-				<!-- 设备卡片 - CO2 -->
+				<!-- 设备卡片 - co2 -->
 				<view class="dev-cart">
 					<view>
-						<view class="dev-name">CO2</view>
+						<view class="dev-name">co2</view>
 						<image class="dev-logo" src="../../static/co2.png" mode=""></image>
 					</view>
 					<view class="dev-data">{{CO2}}</view>
@@ -74,10 +74,10 @@
 					<view class="dev-data">{{humidity1}} %</view>
 				</view>
 
-				<!-- 设备卡片 - CO21 -->
+				<!-- 设备卡片 - co21 -->
 				<view class="dev-cart">
 					<view>
-						<view class="dev-name">CO2</view>
+						<view class="dev-name">co21</view>
 						<image class="dev-logo" src="../../static/co2.png" mode=""></image>
 					</view>
 					<view class="dev-data">{{CO21}}</view>
@@ -132,7 +132,7 @@
 
 			<!-- 光照阈值 -->
 			<view class="threshold-item">
-				<input class="threshold-input" type="number" placeholder="光照阈值(0-4900)" v-model="thLight" :maxlength="4" />
+				<input class="threshold-input" type="number" placeholder="光照阈值(0-99)" v-model="thLight" :maxlength="2" />
 				<button class="threshold-button" @click="setThLight">设置光照</button>
 			</view>
 
@@ -140,6 +140,12 @@
 			<view class="threshold-item">
 				<input class="threshold-input" type="number" placeholder="土壤湿度阈值(0-4900)" v-model="thSoil" :maxlength="4" />
 				<button class="threshold-button" @click="setThSoil">设置土壤湿度</button>
+			</view>
+
+			<!-- CO2阈值 -->
+			<view class="threshold-item">
+				<input class="threshold-input" type="number" placeholder="CO2阈值" v-model="thCO2" />
+				<button class="threshold-button" @click="setThCO2">设置CO2</button>
 			</view>
 		</view>
 		
@@ -187,6 +193,7 @@
 				thHumidity: '',
 				thLight: '',
 				thSoil: '',
+				thCO2: '',
 				// 控制状态
 				led: false,
 				key_th: {},
@@ -272,7 +279,7 @@
 									case 'humidity':
 										this.humidity = item.value;
 										break;
-									case 'CO2':
+									case 'co2':
 										this.CO2 = item.value;
 										break;
 									case 'light':
@@ -287,7 +294,7 @@
 									case 'humidity1':
 										this.humidity1 = item.value;
 										break;
-									case 'CO21':
+									case 'co21':
 										this.CO21 = item.value;
 										break;
 									case 'light1':
@@ -497,8 +504,8 @@
 			// 设置光照阈值
 			setThLight() {
 				let value = parseInt(this.thLight);
-				if (isNaN(value) || value < 0 || value > 4900) {
-					uni.showToast({ title: '请输入0-4900的数值', icon: 'none' });
+				if (isNaN(value) || value < 0 || value > 99) {
+					uni.showToast({ title: '请输入0-99的数值', icon: 'none' });
 					return;
 				}
 				uni.request({
@@ -542,6 +549,32 @@
 					},
 					success: () => {
 						uni.showToast({ title: '土壤湿度阈值设置成功', icon: 'success' });
+					}
+				});
+			},
+
+			// 设置CO2阈值
+			setThCO2() {
+				let value = parseInt(this.thCO2);
+				if (isNaN(value)) {
+					uni.showToast({ title: '请输入有效的数值', icon: 'none' });
+					return;
+				}
+				uni.request({
+					url: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
+					method: 'POST',
+					data: {
+						product_id: product_id,
+						device_name: device_name,
+						params: {
+							"co2_th": value
+						}
+					},
+					header: {
+						'authorization': this.token
+					},
+					success: () => {
+						uni.showToast({ title: 'CO2阈值设置成功', icon: 'success' });
 					}
 				});
 			}

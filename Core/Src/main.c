@@ -53,6 +53,8 @@
 
 /* USER CODE BEGIN PV */
 DHT11_Data_t dht11_data = {0};
+static uint8_t water_pump_started = 0;
+static uint32_t water_pump_start_tick = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -148,7 +150,8 @@ int main(void)
     char soil_str[32];
     static uint32_t last_mqtt_time = 0;
 
-    uint16_t light_value = ADC1_Read_Average(10);
+    uint16_t light_adc_raw = ADC1_Read_Average(10);
+    uint16_t light_value = 100 - ((100 * light_adc_raw) / 4096);
     uint16_t soil_moisture_value = ADC2_Read_Average(10);
 
     DHT11_READ_DATA(&dht11_data);
@@ -195,19 +198,27 @@ int main(void)
         int16_t light_threshold = Control_GetThreshold(THRESHOLD_LIGHT);
         int16_t soil_threshold = Control_GetThreshold(THRESHOLD_SOIL);
         int16_t humidity_threshold = Control_GetThreshold(THRESHOLD_HUMIDITY);
+        int16_t co2_threshold = Control_GetThreshold(THRESHOLD_CO2);
         
-        /* 温度控制：高于阈值启动风扇，低于阈值关闭风扇 */
-        if(dht11_data.temp_int >= temp_threshold)
+        /* 蜂鸣器控制：温度、湿度、土壤、CO2、光照中任一超过阈值时响铃，全部低于阈值时关闭 */
+        uint8_t beep_triggered = 0;
+        if(dht11_data.temp_int >= temp_threshold) beep_triggered = 1;
+        if(dht11_data.humidity_int >= humidity_threshold) beep_triggered = 1;
+        if(soil_moisture_value >= soil_threshold) beep_triggered = 1;
+        if(co2_val != 0xFFFF && co2_val >= co2_threshold) beep_triggered = 1;
+        if(light_value > light_threshold) beep_triggered = 1;
+        
+        if(beep_triggered)
         {
-            HAL_GPIO_WritePin(FAN_GPIO_Port, FAN_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_SET);
         }
         else
         {
-            HAL_GPIO_WritePin(FAN_GPIO_Port, FAN_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_RESET);
         }
         
-        /* 光照控制：大于阈值启动LED，小于阈值关闭LED */
-        if(light_value >= light_threshold)
+        /* 光照控制：光照百分比小于阈值时启动LED补光，大于等于阈值时关闭LED */
+        if(light_value < light_threshold)
         {
             HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
         }
@@ -216,24 +227,37 @@ int main(void)
             HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
         }
         
-        /* 土壤湿度控制：高于阈值启动水泵浇水，低于阈值关闭水泵 */
-        if(soil_moisture_value > soil_threshold)
+        /* 水泵控制：土壤湿度高于阈值时启动水泵，低于阈值时关闭 */
+        if(soil_moisture_value >= soil_threshold)
         {
-            HAL_GPIO_WritePin(WATER_GPIO_Port, WATER_Pin, GPIO_PIN_SET);
+            if(!water_pump_started)
+            {
+                HAL_GPIO_WritePin(WATER_GPIO_Port, WATER_Pin, GPIO_PIN_SET);
+                water_pump_started = 1;
+                water_pump_start_tick = HAL_GetTick();
+            }
         }
         else
         {
-            HAL_GPIO_WritePin(WATER_GPIO_Port, WATER_Pin, GPIO_PIN_RESET);
+            if(water_pump_started && HAL_GetTick() - water_pump_start_tick >= 200)
+            {
+                HAL_GPIO_WritePin(WATER_GPIO_Port, WATER_Pin, GPIO_PIN_RESET);
+                water_pump_started = 0;
+            }
         }
         
-        /* 空气湿度控制：低于阈值启动蜂鸣器提示，高于阈值关闭 */
-        if(dht11_data.humidity_int < humidity_threshold)
+        /* 风扇控制：湿度或CO2任一超过阈值时开启风扇，两者都低于阈值时关闭 */
+        uint8_t fan_triggered = 0;
+        if(dht11_data.humidity_int >= humidity_threshold) fan_triggered = 1;
+        if(co2_val != 0xFFFF && co2_val >= co2_threshold) fan_triggered = 1;
+        
+        if(fan_triggered)
         {
-            HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(FAN_GPIO_Port, FAN_Pin, GPIO_PIN_SET);
         }
         else
         {
-            HAL_GPIO_WritePin(BEEP_GPIO_Port, BEEP_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(FAN_GPIO_Port, FAN_Pin, GPIO_PIN_RESET);
         }
     }
     
